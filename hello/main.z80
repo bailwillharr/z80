@@ -16,10 +16,11 @@
 ;	stack pointer is set to $FFFF
 ;	the UART is initialised
 start
+	ld sp, $FFFF
 	call clear
 cmdloop
 	ld hl, prompt_str
-	call _uart_puts
+	call puts
 	ld hl, cmd_buf
 
 	ld b, 1		; loop through the cmd buffer to clear it

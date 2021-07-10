@@ -29,13 +29,13 @@ loop
 	dec b
 	push hl
 	ld hl, STR_BACK
-	call _uart_puts
+	call puts
 	pop hl
 	jr loop
 
 no_backspace
 
-	call _uart_write	; echo user's input
+	call putc		; echo user's input
 
 	cp CR
 	jr z, 1$
@@ -46,7 +46,7 @@ no_backspace
 	jr loop
 1$
 	ld a, LF
-	call _uart_write
+	call putc
 	ret
 ; constants
 STR_BACK
@@ -58,8 +58,51 @@ STR_BACK
 clear
 #local
 	ld hl, STR_CLR
-	call _uart_puts
+	call puts
 	ret
 STR_CLR
 	.dm ESC,"[2J",ESC,"[1;1H",0
+#endlocal
+
+; readc
+; read a character from the terminal
+; no inputs
+; a - byte received
+readc
+#local
+1$
+	in a, (IO_UART_LSR)
+	and %00000001
+	jr z, 1$
+	in a, (IO_UART_RBR)
+	ret
+#endlocal
+
+; putc
+; write a character to the terminal
+; a - char to write
+putc
+#local
+	ld c, a
+1$
+	in a, (IO_UART_LSR)
+	and %01000000
+	jr z, 1$
+	ld a, c
+	out (IO_UART_THR), a
+	ret
+#endlocal
+
+; puts
+; print a string to the terminal
+; hl - ptr to string terminated with a zero
+puts
+#local
+1$
+	ld a, (hl)
+	inc hl
+	or a
+	ret z
+	call putc
+	jr 1$
 #endlocal

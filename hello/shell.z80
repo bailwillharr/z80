@@ -38,7 +38,7 @@ cmdparse
 4$
 
 	ld hl, STR_UNKNOWN
-	call _uart_puts
+	call puts
 	ret
 
 ; constants

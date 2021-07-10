@@ -5,7 +5,7 @@
 com_led
 	ld a, $88
 	out (IO_7SEG), a
-	call _uart_read
+	call readc
 	xor a
 	out (IO_7SEG), a
 	ret
@@ -15,7 +15,7 @@ com_led
 com_sp
 #local
 	ld hl, STR_NOT_IMPLEMENTED
-	call _uart_puts
+	call puts
 	ret
 ; constants
 STR_NOT_IMPLEMENTED
@@ -27,7 +27,7 @@ STR_NOT_IMPLEMENTED
 com_text
 #local
 	ld hl, STR_SHAKESPEARE
-	call _uart_puts
+	call puts
 	ret
 ; constants
 STR_SHAKESPEARE
