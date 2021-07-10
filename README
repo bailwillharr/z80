@@ -1,0 +1,19 @@
+rom/ contains the read only bootstrap code that receives a file via XMODEM and
+jumps to it. It also contains some useful romcalls for interfacing with the
+UART, among other things.
+
+hello/ contains the program that is sent via XMODEM. This makes debugging
+faster and prolongs the life of the EEPROM.
+
+Assembly is done using 'zasm' and XMODEM transmission is done using 'sx' from
+the 'lrzxz' package. The terminal 'st' is used to open a serial console for
+communication with the Z80 computer.
+
+--------------------------------------------------------------------------------
+
+After initialisation from the ROM, the Z80 computer waits for XMODEM
+transmission to begin, and downloads the file to $8000 in memory.
+The program counter then jumps to $8000 to begin program execution.
+Memory banks $E0-$E3 are mapped, which corresponds to the first 4 RAM pages.
+This allows the copy of ROM to be overwritten to implement things such as
+interrupt handlers.
