@@ -1,0 +1,169 @@
+; uart.z80
+
+uart_init
+	ld a, %00000111		; FIFO enable, Rx FIFO reset,
+			 	; Tx FIFO reset, FIFO trigger = 1 byte
+	out (IO_UART_FCR), a	; FIFO Control Register
+
+	ld a, %00000000		; disable all interrupts
+	out (IO_UART_IER), a	; Interrupt Enable Register
+
+	ld a, %10000011		; 8 bit data, 1 stop, no parity, enable DLAB
+	out (IO_UART_LCR), a	; Line Control Register
+
+	xor a			; a = 0
+	out (IO_UART_DLM), a	; Divisor Latch Register MSB
+	ld a, 100		; 16,000,000 / (16*100) = 10,000 Baud
+	out (IO_UART_DLL), a	; Divisor Latch Register LSB
+
+	ld a, %00000011		; disable DLAB, keep 8N1 framing
+	out (IO_UART_LCR), a	; Line Control Register
+
+	ret
+
+
+; write a byte to the UART
+; inputs: a - byte to send
+; destroys: c
+uart_write
+	ld c, a
+1$
+	in a, (IO_UART_LSR)
+	and %01000000
+	jr z, 1$
+	ld a, c
+	out (IO_UART_THR), a
+	ret
+
+
+; print a null-terminated string to the serial terminal
+; inputs: hl - ptr to string
+; destroys: hl, a, c
+uart_puts
+	ld a, (hl)
+	inc hl
+	or a
+	ret z
+	call uart_write
+	jr uart_puts
+
+
+; read characters from the serial terminal into a buffer until enter is pressed
+; the enter key (CR) is stored in the buffer
+; inputs: hl - ptr to buffer
+; destroys: hl, a, c
+uart_readln
+	in a, (IO_UART_LSR)	; UART Line Status Register
+	and %00000001		; bitmask for Data Ready (DR)
+	jr z, uart_readln	; loop until a char is received
+
+	in a, (IO_UART_RBR)	; read from UART receive buffer
+	or a			; set/reset Z flag
+	jr z, uart_readln	; ignore $00
+
+	call uart_write		; echo the user's input
+	ld (hl), a		; load the char into the buffer
+	inc hl
+
+	cp CR
+	jr nz, uart_readln	; repeat until CR is received
+
+	ld a, LF		; append an LF to go with the echo'd CR
+	call uart_write
+	ret
+
+
+; read a byte from the UART
+; outputs: a - byte receieved
+; destroys: a
+uart_read
+	in a, (IO_UART_LSR)	; UART Line Status Register
+	and %00000001		; bitmask for Data Ready (DR)
+	jr z, uart_read		; loop until a char is received
+	in a, (IO_UART_RBR)	; read from UART receive buffer
+	ret
+
+
+; receive xmodem file and place contents at $8000-$BFFF
+uart_recx
+#local
+DEST	equ $8000
+
+	ld hl, STARTING
+	call uart_puts
+	ld a, NAK		; tell uploader to start the transfer
+	call uart_write
+
+	ld b, 1			; packet number
+	ld de, DEST
+
+recv_loop
+	call uart_read
+	cp SOH
+	jr z, 2$
+	cp EOT			; if not an SOH, check if it's an EOT
+	jr z, transmit_end
+	ld hl, LONG
+	call uart_puts
+	ld hl, NO_SOH_ERR
+	call uart_puts
+	ret
+2$	call uart_read
+	cp b
+	jr z, 1$		; error if packet numbers aren't the same
+	ld hl, LONG
+	call uart_puts
+	ld hl, PKT_NUM_ERR
+	call uart_puts
+	ret
+1$	inc b			; increment packet number
+	call uart_read		; get the 1's complement packet number
+				; and just ignore it
+	; TODO verify packet number 1's complement
+
+	ld c, 128		; loop 128 times
+packet_loop
+	call uart_read
+	ld (de), a
+	inc de
+	dec c
+	jr nz, packet_loop	; end of loop
+
+	call uart_read		; read checksum and ignore it
+	; TODO verify checksum
+
+	ld a, ACK
+	call uart_write
+	jr recv_loop
+transmit_end
+	ld a, NAK
+	call uart_write
+	call uart_read
+	cp EOT
+	jr z, 3$
+	ld hl, LONG
+	call uart_puts
+	ld hl, NO_FINAL_EOT_ERR
+	call uart_puts
+3$	ld a, ACK
+	call uart_write
+4$	call uart_read
+	cp CR
+	jr nz, 4$
+	ld hl, TRANSFER_COMPLETE
+	call uart_puts
+	ret
+
+STARTING
+	dm "Starting XMODEM download...",CR,LF,0
+NO_SOH_ERR
+	dm "Error: no SOH received",CR,LF,0
+PKT_NUM_ERR
+	dm "Error: invalid packet number",CR,LF,0
+NO_FINAL_EOT_ERR
+	dm "Error: no final EOT received",CR,LF,0
+LONG
+	dm CAN,CAN,CAN,CAN,"LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLOOOOOOOOOOOOOOOOOOOOOOOOOONNNNNNNNNNNNNNNNNNNGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG",0
+TRANSFER_COMPLETE
+	dm "transfer complete",CR,LF,0
+#endlocal

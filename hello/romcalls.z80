@@ -1,0 +1,6 @@
+; romcalls.z80
+
+_uart_write	equ $0080
+_uart_puts	equ $008B
+_uart_readln	equ $0094
+_uart_read	equ $00AE

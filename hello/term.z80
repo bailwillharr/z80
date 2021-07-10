@@ -1,0 +1,65 @@
+; term.z80
+
+; scanln
+; inputs: hl - pointer to buffer
+; Read characters from the terminal into a buffer until enter is received.
+; The enter key (CR) is not saved.
+scanln
+#local
+	ld b, 0			; keep track of index into buffer
+loop
+	in a, (IO_UART_LSR)	; line status register
+	and %00000001		; bitmask for data ready
+	jr z, loop		; loop until char received
+
+	in a, (IO_UART_RBR)	; read from receive buffer
+	or a			; set/reset z flag
+	jr z, loop		; ignore 0
+
+	out (IO_7SEG), a	; DEBUG display code on 7 seg
+
+	cp DEL			; exception for backspace key
+	jr nz, no_backspace
+
+	ld a, b
+	or a
+	jr z, loop
+	dec hl
+	ld (hl), 0
+	dec b
+	push hl
+	ld hl, STR_BACK
+	call _uart_puts
+	pop hl
+	jr loop
+
+no_backspace
+
+	call _uart_write	; echo user's input
+
+	cp CR
+	jr z, 1$
+
+	inc b
+	ld (hl), a		; load char into buffer
+	inc hl
+	jr loop
+1$
+	ld a, LF
+	call _uart_write
+	ret
+; constants
+STR_BACK
+	.dm BS," ",BS,0
+#endlocal
+
+; clear
+; clear the screen and set cursor position to 1,1
+clear
+#local
+	ld hl, STR_CLR
+	call _uart_puts
+	ret
+STR_CLR
+	.dm ESC,"[2J",ESC,"[1;1H",0
+#endlocal

@@ -1,0 +1,50 @@
+; main.z80
+
+#target ram
+#code CODE, $8000, $1000
+#data DATA, $9000, $100
+
+; equates
+#include "constants.z80"
+#include "romcalls.z80"
+
+#code CODE
+; When the CPU jumps here, many things have already been done:
+;	the entire address space is mapped to the first 4 16KB ram pages
+;	the ROM is copied to the first 2 of those pages
+;	the clock speed is set to 20MHz
+;	stack pointer is set to $FFFF
+;	the UART is initialised
+start
+	call clear
+cmdloop
+	ld hl, prompt_str
+	call _uart_puts
+	ld hl, cmd_buf
+
+	ld b, 1		; loop through the cmd buffer to clear it
+1$	ld (hl), 0
+	inc hl
+	dec b
+	jr nz, 1$
+
+	ld hl, cmd_buf	; read input into buffer
+	call scanln
+	ld hl, cmd_buf
+	call cmdparse	; parse and run the corresponding cmd
+
+	jr cmdloop
+
+; other code and data
+#include "term.z80"
+#include "shell.z80"
+#include "commands.z80"
+#include "string.z80"
+
+; constants
+prompt_str
+	dm "> ",0
+
+#data DATA
+cmd_buf
+	ds 64

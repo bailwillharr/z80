@@ -1,0 +1,64 @@
+; term.z80
+
+; com_led
+; Turn on leds until a key is pressed
+com_led
+	ld a, $88
+	out (IO_7SEG), a
+	call _uart_read
+	xor a
+	out (IO_7SEG), a
+	ret
+
+; com_sp
+; print the contents of the stack pointer
+com_sp
+#local
+	ld hl, STR_NOT_IMPLEMENTED
+	call _uart_puts
+	ret
+; constants
+STR_NOT_IMPLEMENTED
+	.dm "Feature not yet implemented.",CR,LF,0
+#endlocal
+
+; com_text
+; Print some Shakespeare
+com_text
+#local
+	ld hl, STR_SHAKESPEARE
+	call _uart_puts
+	ret
+; constants
+STR_SHAKESPEARE
+	.dm "SCENE I. Rome. A street.",CR,LF
+	.dm HT,"Enter FLAVIUS, MARULLUS, and certain Commoners",CR,LF
+	.dm "FLAVIUS",CR,LF
+	.dm HT,"Hence! home, you idle creatures get you home:",CR,LF
+	.dm HT,"Is this a holiday? what! know you not,",CR,LF
+	.dm HT,"Being mechanical, you ought not walk",CR,LF
+	.dm HT,"Upon a labouring day without the sign",CR,LF
+	.dm HT,"Of your profession? Speak, what trade art thou?",CR,LF
+	.dm "First Commoner",CR,LF
+	.dm HT,"Why, sir, a carpenter.",CR,LF
+	.dm "MARULLUS",CR,LF
+	.dm HT,"Where is thy leather apron and thy rule?",CR,LF
+	.dm HT,"What dost thou with thy best apparel on?",CR,LF
+	.dm HT,"You, sir, what trade are you?",CR,LF
+	.dm "Second Commoner",CR,LF
+	.dm HT,"Truly, sir, in respect of a fine workman, I am but,",CR,LF
+	.dm HT,"as you would say, a cobbler.",CR,LF
+	.dm "MARULLUS",CR,LF
+	.dm HT,"But what trade art thou? answer me directly.",CR,LF
+	.dm "Second Commoner",CR,LF
+	.dm HT,"A trade, sir, that, I hope, I may use with a safe",CR,LF
+	.dm HT,"conscience; which is, indeed, sir, a mender of bad soles.",CR,LF
+	.dm "MARULLUS",CR,LF
+	.dm HT,"What trade, thou knave? thou naughty knave, what trade?",CR,LF
+	.dm "Second Commoner",CR,LF
+	.dm HT,"Nay, I beseech you, sir, be not out with me: yet,",CR,LF
+	.dm HT,"if you be out, sir, I can mend you.",CR,LF
+	.dm "MARULLUS",CR,LF
+	.dm HT,"What meanest thou by that? mend me, thou saucy fellow!",CR,LF
+	.dm 0
+#endlocal

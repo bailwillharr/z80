@@ -1,0 +1,56 @@
+; init.z80
+; Copies the program into RAM, unmaps the ROM,
+; maps 64KB of RAM, and jumps to 'main'.
+; When copied, the program will occupy $0000 to its size.
+
+#target rom
+
+#code CODE, $0, $8000
+#data DATA, $C000, $4000
+
+#code CODE
+
+#include "constants.z80"
+
+	ld a, $77		; '77' signifies that the program is loading
+	out (IO_7SEG), a
+
+	xor a			; $00 - rom segment 0
+	out (IO_MMU_BANK0), a	; address 0000-3FFF
+	inc a			; $01 - rom segment 1
+	out (IO_MMU_BANK1), a	; address 4000-7FFF
+	ld a, $E0		; $E0 - ram segment 0
+	out (IO_MMU_BANK2), a	; address 8000-BFFF
+	inc a			; $E1 - ram segment 1
+	out (IO_MMU_BANK3), a	; address C000-FFFF
+	out (IO_MMU_EN), a	; value of A register doesn't matter
+
+				; copy program to RAM
+	ld hl, $0000		; source address
+	ld de, $8000		; destination address
+	ld bc, $8000		; size of data to copy
+	ldir
+
+	.phase	$8000 + $
+	jp _ramsetup		; jump to the copied version
+_ramsetup
+	ld a, $E0		; $E0 - ram segment 0
+	out (IO_MMU_BANK0), a	; address 0000-3FFF
+	inc a			; $E1 - ram segment 1
+	out (IO_MMU_BANK1), a	; address 4000-7FFF
+
+	.dephase
+	jp _continue		; jump to the original location (now RAM)
+_continue
+
+	inc a			; $E2 - ram segment 2
+	out (IO_MMU_BANK2), a	; address 8000-BFFF
+	inc a			; $E3 - ram segment 3
+	out (IO_MMU_BANK3), a	; address C000-FFFF
+
+	ld a, $FF		; FF appears as blank, loading is done
+	out (IO_7SEG), a
+
+	jp main
+
+#include "main.z80"

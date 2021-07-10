@@ -1,0 +1,74 @@
+; constants.z80
+
+; MEMORY LOCATIONS
+INT1		equ $0038
+NMI		equ $0066
+
+; IO PORTS
+IO_MMU_BANK0	equ $00
+IO_MMU_BANK1	equ $01
+IO_MMU_BANK2	equ $02
+IO_MMU_BANK3	equ $03
+IO_MMU_EN	equ $07
+
+; $01 = 2.5MHz, $02 = 20MHz, $03 = toggle
+IO_CLK		equ $10
+
+IO_7SEG		equ $20
+
+IO_SLOT1	equ $30
+IO_SLOT2	equ $40
+IO_SLOT3	equ $50
+IO_SLOT4	equ $60
+IO_SLOT5	equ $70
+IO_SLOT6	equ $80
+
+; UART
+IO_UART		equ IO_SLOT6
+
+IO_UART_RBR	equ IO_UART | $0
+IO_UART_THR	equ IO_UART | $0
+IO_UART_IER	equ IO_UART | $1
+IO_UART_IIR	equ IO_UART | $2
+IO_UART_FCR	equ IO_UART | $2
+IO_UART_LCR	equ IO_UART | $3
+IO_UART_MCR	equ IO_UART | $4
+IO_UART_LSR	equ IO_UART | $5
+IO_UART_MSR	equ IO_UART | $6
+IO_UART_SCR	equ IO_UART | $7
+IO_UART_DLL	equ IO_UART | $0 ; DLAB = 1
+IO_UART_DLM	equ IO_UART | $1 ; DLAB = 1
+
+; ASCII control codes
+NUL		equ $00	; null
+SOH		equ $01	; start of heading
+STX		equ $02	; start of text
+ETX		equ $03	; end of text
+EOT		equ $04	; end of transmission
+ENQ		equ $05	; enquiry
+ACK		equ $06	; acknowledge
+BEL		equ $07	; bell
+BS		equ $08	; backspace
+HT		equ $09	; horizontal tab
+LF		equ $0A	; new line
+VT		equ $0B	; vertical tab
+FF		equ $0C	; form feed
+CR		equ $0D	; carriage ret
+SO		equ $0E	; shift out
+SI		equ $0F	; shift in
+DLE		equ $10	; data link escape
+DC1		equ $11	; device control 1
+DC2		equ $12	; device control 2
+DC3		equ $13	; device control 3
+DC4		equ $14	; device control 4
+NAK		equ $15	; negative ack
+SYN		equ $16	; synchronous idle
+ETB		equ $17	; end of trans blk
+CAN		equ $18	; cancel
+EM		equ $19	; end of medium
+SUB		equ $1A	; substitute
+ESC		equ $1B	; escape
+FS		equ $1C	; file seperator
+GS		equ $1D	; group seperator
+RS		equ $1E	; record seperator
+US		equ $1F	; unit seperator

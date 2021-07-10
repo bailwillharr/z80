@@ -1,0 +1,9 @@
+This ROM allows programs to be loaded into RAM via XMODEM at every boot.
+Instructions to load program:
+	- ensure power is off
+	- plug PC into UART
+	- connect to the UART
+	- transmit your file using XMODEM
+	- power up the Z80 computer
+	- once finished, press enter
+	- your program will now run

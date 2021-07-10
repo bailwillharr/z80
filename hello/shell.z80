@@ -1,0 +1,57 @@
+; term.z80
+
+; cmdparse
+; inputs: hl - pointer to string containing command
+; Parse the string and call the relevant function with the correct arguemnts
+cmdparse
+#local
+	ld a, (hl)	; exit if the string it empty
+	or a
+	ret z
+
+	ld de, STR_COM_LED
+	call strcmp
+	jr nz, 1$
+	call com_led
+	ret
+1$
+
+	ld de, STR_COM_SP
+	call strcmp
+	jr nz, 2$
+	call com_sp
+	ret
+2$
+
+	ld de, STR_COM_CLS
+	call strcmp
+	jr nz, 3$
+	call clear
+	ret
+3$
+
+	ld de, STR_COM_TEXT
+	call strcmp
+	jr nz, 4$
+	call com_text
+	ret
+4$
+
+	ld hl, STR_UNKNOWN
+	call _uart_puts
+	ret
+
+; constants
+STR_UNKNOWN
+	.dm "Unknown command",CR,LF,0
+
+; list of commands
+STR_COM_LED
+	.dm "LED",0
+STR_COM_SP
+	.dm "SP",0
+STR_COM_CLS
+	.dm "CLS",0
+STR_COM_TEXT
+	.dm "TEXT",0
+#endlocal

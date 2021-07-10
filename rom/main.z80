@@ -1,0 +1,24 @@
+; main.z80
+	
+	.org INT1
+INT1
+	ret
+
+	.org NMI
+NMI
+	retn
+
+#include "uart.z80"
+
+main
+	ld sp, DATA_end - 1	; top of RAM
+
+	ld a, %00000010		; set clock to 20 MHz
+	out (IO_CLK), a
+
+	call uart_init
+
+	call uart_recx
+	jp $8000		; jump to new program and never come back
+
+#include "data.z80"

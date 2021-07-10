@@ -1,0 +1,12 @@
+; term.z80
+
+; strcmp
+; inputs: hl, de - pointers to strings to compare
+; outputs: ZF flag - set if equal
+; hl is preserved
+strcmp
+	ld b, (hl)
+	ld a, (de)
+	cp b
+	ret
+
