@@ -1,7 +1,7 @@
 ; term.z80
 
 ; scanln
-; inputs: hl - pointer to buffer
+; inputs: hl - pointer to buffer, d - buffer length
 ; Read characters from the terminal into a buffer until enter is received.
 ; The enter key (CR) is not saved.
 scanln
@@ -21,7 +21,7 @@ loop
 	cp DEL			; exception for backspace key
 	jr nz, no_backspace
 
-	ld a, b
+	ld a, b			; backspace stuff:
 	or a
 	jr z, loop
 	dec hl
@@ -35,16 +35,27 @@ loop
 
 no_backspace
 
-	call putc		; echo user's input
-
 	cp CR
-	jr z, 1$
+	jr z, enter_received
+
+	; make sure its a typeable char ($20-$7E)
+	cp $20
+	jp m, loop
+
+	ld e, a		; register shuffling to preserve a
+	ld a, b
+	cp d
+	ld a, e
+	jr z, loop
+
+	call putc		; echo user's input
 
 	inc b
 	ld (hl), a		; load char into buffer
 	inc hl
 	jr loop
-1$
+enter_received
+	call putc
 	ld a, LF
 	call putc
 	ret
@@ -56,6 +67,17 @@ STR_BACK
 ; clear
 ; clear the screen and set cursor position to 1,1
 clear
+#local
+	ld hl, STR_CLR
+	call puts
+	ret
+STR_CLR
+	.dm ESC,"[2J",ESC,"[1;1H",0
+#endlocal
+
+; newline
+; writes CR and LF
+newline
 #local
 	ld hl, STR_CLR
 	call puts

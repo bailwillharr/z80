@@ -1,0 +1,80 @@
+; term.z80
+
+; word_to_hex
+; inputs: hl - word, de - 5 byte destination buffer
+word_to_hex
+#local
+	; first hex digit
+	ld a, h
+	srl a
+	srl a
+	srl a
+	srl a
+	and %00001111
+	call halfbyte_to_hex
+	ld (de), a
+	inc de
+
+	; second hex digit
+	ld a, h
+	and %00001111
+	call halfbyte_to_hex
+	ld (de), a
+	inc de
+
+	; third hex digit
+	ld a, l
+	srl a
+	srl a
+	srl a
+	srl a
+	and %00001111
+	call halfbyte_to_hex
+	ld (de), a
+	inc de
+
+	; fourth hex digit
+	ld a, l
+	and %00001111
+	call halfbyte_to_hex
+	ld (de), a
+	inc de
+
+	; terminating zero
+	ld a, 0
+	ld (de), a
+
+	ret
+#endlocal
+
+; halfbyte_to_hex
+; inputs: a - half byte (upper 4 bits must be empty)
+; outputs: a - ASCII character
+halfbyte_to_hex
+#local
+	ld bc, HEX_TABLE
+	add a, c
+	ld c, a
+	ld a, (bc)
+	ret
+	
+	.align 16
+HEX_TABLE
+	.db '0'
+	.db '1'
+	.db '2'
+	.db '3'
+	.db '4'
+	.db '5'
+	.db '6'
+	.db '7'
+	.db '8'
+	.db '9'
+	.db 'A'
+	.db 'B'
+	.db 'C'
+	.db 'D'
+	.db 'E'
+	.db 'F'
+
+#endlocal

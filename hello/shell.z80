@@ -5,45 +5,65 @@
 ; Parse the string and call the relevant function with the correct arguemnts
 cmdparse
 #local
-	ld a, (hl)	; exit if the string it empty
+	ld a, (hl)	; exit if the string is empty
 	or a
 	ret z
 
-	ld de, STR_COM_LED
-	call strcmp
-	jr nz, 1$
-	call com_led
-	ret
-1$
+	ld ix, COMMANDS-4	; -4 because of the increment
+	ld a, (ix+4)
+	ld (loop_count), a
+	inc ix
+loop
 
-	ld de, STR_COM_SP
-	call strcmp
-	jr nz, 2$
-	call com_sp
-	ret
-2$
+	ld a, (loop_count)
+	or a
+	jr z, exit_loop
+	dec a
+	ld (loop_count), a
 
-	ld de, STR_COM_CLS
-	call strcmp
-	jr nz, 3$
-	call clear
-	ret
-3$
+	inc ix
+	inc ix
+	inc ix
+	inc ix
 
-	ld de, STR_COM_TEXT
-	call strcmp
-	jr nz, 4$
-	call com_text
-	ret
-4$
+	ld a, (ix)
+	ld c, a
+	ld a, (ix+1)
+	ld b, a		; bc now contains the cmd string
 
+	push hl
+	call strcmp	; compare hl and bc
+	pop hl
+	jr nz, loop
+
+	ld a, (ix+2)
+	ld iyl, a
+	ld a, (ix+3)
+	ld iyh, a	; iy contains the routine to call
+
+	; when this returns, it will return to the caller of the current routine
+	jp (iy)
+
+exit_loop
 	ld hl, STR_UNKNOWN
 	call puts
 	ret
 
 ; constants
-STR_UNKNOWN
-	.dm "Unknown command",CR,LF,0
+
+COMMANDS
+	.db (COMMANDS_end - COMMANDS - 1) / 4
+	.dw STR_COM_LED
+	.dw com_led
+	.dw STR_COM_SP
+	.dw com_sp
+	.dw STR_COM_CLS
+	.dw clear
+	.dw STR_COM_TEXT
+	.dw com_text
+	.dw STR_COM_HALT
+	.dw com_halt
+COMMANDS_end
 
 ; list of commands
 STR_COM_LED
@@ -54,4 +74,16 @@ STR_COM_CLS
 	.dm "CLS",0
 STR_COM_TEXT
 	.dm "TEXT",0
+STR_COM_HALT
+	.dm "HALT",0
+
+STR_UNKNOWN
+	.dm "Unknown command",CR,LF,0
+
+; variables
+#data DATA
+loop_count
+	.ds 1
+#code CODE
+
 #endlocal

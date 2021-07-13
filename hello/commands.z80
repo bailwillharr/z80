@@ -14,12 +14,24 @@ com_led
 ; print the contents of the stack pointer
 com_sp
 #local
-	ld hl, STR_NOT_IMPLEMENTED
+	ld hl, 0
+	add hl, sp
+	ld de, buf_hex_str
+	call word_to_hex
+	ld hl, buf_hex_str
 	call puts
+	ld a, CR
+	call putc
+	ld a, LF
+	call putc
 	ret
 ; constants
 STR_NOT_IMPLEMENTED
 	.dm "Feature not yet implemented.",CR,LF,0
+#data DATA
+buf_hex_str
+	.ds 5
+#code CODE
 #endlocal
 
 ; com_text
@@ -61,4 +73,13 @@ STR_SHAKESPEARE
 	.dm "MARULLUS",CR,LF
 	.dm HT,"What meanest thou by that? mend me, thou saucy fellow!",CR,LF
 	.dm 0
+#endlocal
+
+; com_halt
+com_halt
+#local
+	di
+halt_loop
+	halt
+	jr halt_loop
 #endlocal

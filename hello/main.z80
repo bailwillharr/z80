@@ -1,35 +1,35 @@
 ; main.z80
 
+; max size $7000, keep as small as possible
+CODE_SIZE	equ $600
+
 #target ram
-#code CODE, $8000, $1000
-#data DATA, $9000, $100
+#code CODE, $8000, CODE_SIZE
+#data DATA, $0000, $8000
+#data STCK, $F000, $1000
 
 ; equates
 #include "constants.z80"
 #include "romcalls.z80"
 
 #code CODE
-; When the CPU jumps here, many things have already been done:
-;	the entire address space is mapped to the first 4 16KB ram pages
-;	the ROM is copied to the first 2 of those pages
-;	the clock speed is set to 20MHz
-;	stack pointer is set to $FFFF
-;	the UART is initialised
 start
-	ld sp, $FFFF
+	ld sp, STCK_end - 1
 	call clear
 cmdloop
 	ld hl, prompt_str
 	call puts
-	ld hl, cmd_buf
 
-	ld b, 1		; loop through the cmd buffer to clear it
+	; clear command buffer
+	ld hl, cmd_buf
+	ld b, cmd_buf_len
 1$	ld (hl), 0
 	inc hl
 	dec b
 	jr nz, 1$
 
 	ld hl, cmd_buf	; read input into buffer
+	ld d, cmd_buf_len
 	call scanln
 	ld hl, cmd_buf
 	call cmdparse	; parse and run the corresponding cmd
@@ -38,9 +38,10 @@ cmdloop
 
 ; other code and data
 #include "term.z80"
+#include "string.z80"
+#include "conv.z80"
 #include "shell.z80"
 #include "commands.z80"
-#include "string.z80"
 
 ; constants
 prompt_str
@@ -48,4 +49,5 @@ prompt_str
 
 #data DATA
 cmd_buf
-	ds 64
+	ds 16
+cmd_buf_len	equ $ - cmd_buf

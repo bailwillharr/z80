@@ -1,12 +1,26 @@
 ; term.z80
 
 ; strcmp
-; inputs: hl, de - pointers to strings to compare
+; inputs: hl, bc - pointers to strings to compare
 ; outputs: ZF flag - set if equal
-; hl is preserved
+; does not preserve hl
 strcmp
-	ld b, (hl)
-	ld a, (de)
-	cp b
-	ret
+#local
 
+loop
+	ld a, (bc)
+	or a
+	jr z, end_of_bc
+	cp (hl)
+	ret nz		; exit with NZ if no match
+	inc hl
+	inc bc
+	jr loop
+
+end_of_bc
+	ld a, (hl)
+	or a
+	ret z		; there was a complete match
+	ret		; exit with NZ if no match
+
+#endlocal
