@@ -25,9 +25,6 @@ com_sp
 	ld a, LF
 	call putc
 	ret
-; constants
-STR_NOT_IMPLEMENTED
-	.dm "Feature not yet implemented.",CR,LF,0
 #data DATA
 buf_hex_str
 	.ds 5
