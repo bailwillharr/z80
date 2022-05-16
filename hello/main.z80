@@ -1,11 +1,11 @@
 ; main.z80
 
 ; max size $7000, keep as small as possible
-CODE_SIZE	equ $600
+CODE_SIZE	equ $800
 
 #target ram
 #code CODE, $8000, CODE_SIZE
-#data DATA, $0000, $8000
+#data DATA, $1000, $7000
 #data STCK, $F000, $1000
 
 ; equates
@@ -14,7 +14,33 @@ CODE_SIZE	equ $600
 
 #code CODE
 start
-	ld sp, STCK_end - 1
+	ld sp, STCK_end & $FFFF
+
+; random setup
+
+	im 1
+	ld hl, int_code
+	ld de, INT1
+	ld bc, int_code_end - int_code
+	ldir
+	jr int_code_end
+
+
+
+int_code
+	.phase INT1
+	ld hl, int_str
+	call puts
+	ei
+	ret
+int_str
+	.dm "INT",CR,LF,0
+	.dephase
+int_code_end
+
+
+
+; interactive shell
 	call clear
 cmdloop
 	ld hl, prompt_str
@@ -42,6 +68,7 @@ cmdloop
 #include "conv.z80"
 #include "shell.z80"
 #include "commands.z80"
+#include "math.z80"
 
 ; constants
 prompt_str

@@ -1,0 +1,68 @@
+; math.z80
+
+; div_d_e
+; performs integer division d / e
+; d - quotient, a - remainder
+div_d_e
+#local
+   xor	a
+   ld	b, 8
+
+_loop:
+   sla	d
+   rla
+   cp	e
+   jr	c, $+4
+   sub	e
+   inc	d
+   
+   djnz	_loop
+
+   ret
+#endlocal
+
+
+
+; quotient goes in ac
+; remainder goes in hl
+div_ac_de:
+#local
+   ld	hl, 0
+   ld	b, 16
+
+_loop:
+   sll	c
+   rla
+   adc	hl, hl
+   sbc	hl, de
+   jr	nc, $+4
+   add	hl, de
+   dec	c
+   
+   djnz	_loop
+   
+   ret
+#endlocal
+
+
+
+;### CMPGTE -> test if A>=B
+;### Input      HL=A, DE=B
+;### Output     HL=1, CF=0 -> true
+;###            HL=0, CF=1 -> false
+cmpgte
+#local
+		ld a,h
+        xor d
+        jp m,cmpgte2
+        sbc hl,de
+        jr nc,cmpgte3
+cmpgte1 scf             ;false
+        ld hl,0
+        ret
+cmpgte2 bit 7,d
+        jr z,cmpgte1
+cmpgte3 or a            ;true
+        ld hl,1
+        ret
+#endlocal

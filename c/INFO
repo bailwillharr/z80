@@ -1,0 +1,9 @@
+# MEMORY LAYOUT
+
+START	END		SECTION
+0000	3FFF	home
+4000	7FFF	banks
+8000	BFFF	heap
+C000	FFFF	stack
+
+there is no malloc() or free() so the heap must be managed manually

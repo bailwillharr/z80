@@ -11,7 +11,7 @@ NMI
 #include "uart.z80"
 
 main
-	ld sp, DATA_end - 1	; top of RAM
+	ld sp, DATA_end		; top of RAM
 
 	ld a, %00000010		; set clock to 20 MHz
 	out (IO_CLK), a

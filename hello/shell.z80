@@ -3,7 +3,7 @@
 ; cmdparse
 ; inputs: hl - pointer to string containing command
 ; Parse the string and call the relevant function with the correct arguemnts
-cmdparse
+cmdparse:
 #local
 	ld a, (hl)	; exit if the string is empty
 	or a
@@ -63,9 +63,19 @@ COMMANDS
 	.dw com_text
 	.dw STR_COM_HALT
 	.dw com_halt
+	.dw STR_COM_HELP
+	.dw com_help
+	.dw STR_COM_SLOW
+	.dw com_slow
+	.dw STR_COM_FAST
+	.dw com_fast
+	.dw STR_COM_PRIMES
+	.dw com_primes
+	.dw STR_COM_HIBAUD
+	.dw com_hibaud
 COMMANDS_end
 
-; list of commands
+; command names
 STR_COM_LED
 	.dm "LED",0
 STR_COM_SP
@@ -76,6 +86,16 @@ STR_COM_TEXT
 	.dm "TEXT",0
 STR_COM_HALT
 	.dm "HALT",0
+STR_COM_HELP
+	.dm "HELP",0
+STR_COM_SLOW
+	.dm "SLOW",0
+STR_COM_FAST
+	.dm "FAST",0
+STR_COM_PRIMES
+	.dm "PRIMES",0
+STR_COM_HIBAUD
+	.dm "HIBAUD",0
 
 STR_UNKNOWN
 	.dm "Unknown command",CR,LF,0
