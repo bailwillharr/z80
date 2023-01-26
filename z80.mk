@@ -1,5 +1,5 @@
 FILES		?= $(wildcard *.z80)
-BUILDCMD	?= zasm -uwy
+BUILDCMD	?= zasm -uwy -v3
 
 $(NAME).rom: $(FILES)
 	$(BUILDCMD) -l $(NAME).lst -o $(NAME).rom -i $(ENTRY)

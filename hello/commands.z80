@@ -1,5 +1,7 @@
 ; term.z80
 
+
+
 ; com_led
 ; Turn on leds until a key is pressed
 com_led
@@ -9,6 +11,8 @@ com_led
 	xor a
 	out (IO_7SEG), a
 	ret
+
+
 
 ; com_sp
 ; print the contents of the stack pointer
@@ -30,6 +34,8 @@ buf_hex_str
 	.ds 5
 #code CODE
 #endlocal
+
+
 
 ; com_text
 ; Print some Shakespeare
@@ -72,6 +78,8 @@ STR_SHAKESPEARE
 	.dm 0
 #endlocal
 
+
+
 ; com_halt
 com_halt
 #local
@@ -79,4 +87,251 @@ com_halt
 halt_loop
 	halt
 	jr halt_loop
+#endlocal
+
+
+
+; com_help
+com_help
+#local
+	ld hl, STR_HELP
+	call puts
+	ei
+	call readc
+	di
+	ret
+; constants
+STR_HELP
+	.dm "Interrupts are now enabled. Press any key to disable them.",CR,LF,0
+#endlocal
+
+
+
+; com_slow
+com_slow
+#local
+	ld a, $01
+	out (IO_CLK), a
+	ret
+#endlocal
+
+
+
+; com_fast
+com_fast
+#local
+	ld a, $02
+	out (IO_CLK), a
+	ret
+#endlocal
+
+
+
+; com_primes
+com_primes
+#local
+	ld b, 2
+loop:
+	xor a
+	cp b
+	jr z, loop_end
+
+	ld a, 1
+	ld (isPrime), a
+
+	ld c, 2
+loop2:
+	ld a, b
+	dec a
+	cp c
+	jr c, loop2_end
+
+	; loop 2 body
+
+	push bc
+	push de
+	push hl
+
+	ld de, bc
+	call div_d_e
+
+	pop hl
+	pop de
+	pop bc
+
+	or a
+	jr nz, maybe_prime
+	xor a
+	ld (isPrime), a
+	jr loop2_end
+maybe_prime:
+
+	; loop 2 body end
+
+	inc c
+	jr loop2
+
+loop2_end:
+
+	ld a, (isPrime)
+	cp 1
+	jr nz, not_prime
+
+	push de
+	push bc
+	push hl
+	ld de, print_buffer
+	ld a, b
+	call byte_to_decimal
+	ld hl, print_buffer
+	call puts
+	ld a, CR
+	call putc
+	ld a, LF
+	call putc
+	pop hl
+	pop bc
+	pop de
+
+not_prime:
+
+	inc b
+	jr loop
+loop_end:
+	ret
+
+; variables
+#data DATA
+print_buffer
+	.ds 4
+isPrime
+	.ds 1
+#code CODE
+#endlocal
+
+
+
+; com_primes16
+com_primes16
+#local
+	ld bc, 2
+loop:
+	ld a, b
+	or c
+	jr z, loop_end
+
+	ld a, 1
+	ld (isPrime), a
+
+	ld de, 2
+loop2:
+	ld hl, bc
+	push bc
+	push de
+	call cmpgte
+	pop de
+	pop bc
+	jr c, loop2_end
+
+	; loop 2 body
+
+	push bc
+	push de
+
+	ld a, b
+	; bc -> ac
+	; de -> de
+	call div_ac_de
+
+	pop de
+	pop bc
+
+	ld a, h
+	or l
+	jr nz, maybe_prime
+	xor a
+	ld (isPrime), a
+	jr loop2_end
+maybe_prime:
+
+	; loop 2 body end
+
+	inc de
+	jr loop2
+
+loop2_end:
+
+	ld a, (isPrime)
+	cp 1
+	jr nz, not_prime
+
+	push de
+	push bc
+	push hl
+
+;	ld de, print_buffer
+;	ld a, b
+;	call byte_to_decimal
+;	ld hl, print_buffer
+;	call puts
+;	ld a, CR
+;	call putc
+;	ld a, LF
+;	call putc
+
+	pop hl
+	pop bc
+	pop de
+
+not_prime:
+
+	inc bc
+	jr loop
+loop_end:
+	ret
+
+; variables
+#data DATA
+print_buffer
+	.ds 4
+isPrime
+	.ds 1
+#code CODE
+#endlocal
+
+
+
+; com_hibaud
+com_hibaud:
+#local
+
+	ld hl, str_hibaud
+	call puts
+
+	ld a, %10000011			; 8N1, enable DLAB
+	out (IO_UART_LCR), a
+
+	xor a					; MSB = 0
+	out (IO_UART_DLM), a
+	inc a					; LSB = 1
+	out (IO_UART_DLL), a	; 16,000,000 / (16 * 1) = 1,000,000 Bd
+
+	ld a, %00000011			; keep 8N1, enable DLAB
+	out (IO_UART_LCR), a
+
+enter_loop:
+	call readc
+	cp CR
+	jr nz, enter_loop
+
+	ld a, CR
+	call putc
+	ld a, LF
+	call putc
+
+	ret
+
+; constants
+str_hibaud
+	.dm "Line speed changed to 1,000,000 Bd. Reconnect and press enter to continue...",0
 #endlocal

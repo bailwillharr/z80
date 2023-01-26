@@ -78,3 +78,89 @@ HEX_TABLE
 	.db 'F'
 
 #endlocal
+
+; byte_to_decimal
+; inputs: de - 4 byte destination buffer, a - number
+byte_to_decimal
+#local
+
+	push de
+
+	ld (num), a
+
+	ld d, a
+	ld e, 10
+
+	call div_d_e
+	ld (ones), a
+
+	ld a, (num)
+	ld hl, ones
+	ld b, (hl)
+	sub b
+	ld d, a
+	ld e, 10
+	call div_d_e
+	; quotient is in 'd'
+	ld e, 10
+	call div_d_e
+	ld (tens), a
+
+	; HUNDREDS
+
+	ld a, (tens)
+	add a
+	add a
+	add a
+	add a
+	add a
+	add a
+	add a
+	add a
+	add a		; multiply by 10
+	ld b, a
+	ld a, (ones)
+	add b		; add 'ones'
+	ld b, a
+	ld a, (num)
+	sub b		; subtract all that from 'num'
+	ld d, a
+	ld e, 100
+	call div_d_e	; divide by 100
+	ld e, 10
+	call div_d_e	; modulo 10
+	ld (hundreds), a
+
+	pop de
+
+	; STORE RESULTS
+
+	ld a, (hundreds)
+	add 48
+	ld (de), a
+
+	ld a, (tens)
+	add 48
+	inc de
+	ld (de), a
+
+	ld a, (ones)
+	add 48
+	inc de
+	ld (de), a
+
+	xor a
+	inc de
+	ld (de), a
+
+	ret
+; variables
+num
+	.ds 1
+ones
+	.ds 1
+tens
+	.ds 1
+hundreds
+	.ds 1
+#endlocal
